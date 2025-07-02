@@ -1009,21 +1009,21 @@ def baseline_completed():
         "baseline_duration": st.session_state.stage_timers.get("baseline_screen_duration", 0)
     })
     
-    # Switch to Bloom explanation stage
+    # Switch to baseline completion stage (NEW!)
     st.session_state.baseline_mode = False
     st.session_state.baseline_completed = True
-    st.session_state.stage = "bloom_explanation"
+    st.session_state.stage = "baseline_complete"  # <-- CHANGED: Go to completion stage first
     st.session_state.stage_timers = {}
     st.session_state.current_iteration_data = {}
     
-    log_event("Moving to Bloom explanation stage") 
+    log_event("Moving to baseline completion stage")  # <-- CHANGED: Log the new stage
     
-    # Create practice condition assignment (this should be done when practice starts)
+    # Create practice condition assignment
     st.session_state.practice_condition_mapping = create_practice_condition_assignment(
         st.session_state.participant_id
     )
 
-    log_event("Practice session starting", {
+    log_event("Practice session prepared", {
         "practice_condition_mapping": st.session_state.practice_condition_mapping
     })
 
@@ -1292,13 +1292,45 @@ def submit_edited_question():
     start_iteration()
 
 # Main app
+# Main app
 def main():
     st.title("[파일럿 연구] 생성형 AI의 피드백 유형이 질문 수정에 미치는 영향")
     
     # Initialize session state
     initialize_session_state()
     
-    # Add download button in sidebar for current progress
+    # Handle baseline screen FIRST, before anything else
+    if st.session_state.get('stage') == "baseline_screen":
+        # Calculate elapsed time
+        current_time = time.time()
+        elapsed_time = current_time - st.session_state.baseline_start_time
+        
+        # Check if time is up
+        if elapsed_time >= 30:
+            baseline_completed()
+            st.rerun()
+            return
+        
+        # Show only the '+' symbol, centered
+        st.markdown("""
+        <div style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 72px;
+            font-weight: bold;
+        ">
+        +
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Refresh every 2 seconds
+        time.sleep(2)
+        st.rerun()
+        return  # Don't render anything else
+    
+    # Add sidebar ONLY when not in baseline screen
     with st.sidebar:
         st.header("실험 진행 상황")
         if st.session_state.get('started', False):
@@ -1619,82 +1651,18 @@ def main():
                 log_event("Baseline session started")
                 st.rerun()
         
-        # Handle baseline screen
-        elif st.session_state.stage == "baseline_screen":
-            # Calculate elapsed time
-            elapsed_time = time.time() - st.session_state.baseline_start_time
-            remaining_time = max(0, 30 - elapsed_time)
+        # NOTE: baseline_screen is handled at the top of the main() function
+        
+        # Handle baseline completion screen
+        elif st.session_state.stage == "baseline_complete":
+            st.success("베이스라인 측정이 완료되었습니다!")
+            st.write("30초 동안의 베이스라인 측정이 성공적으로 완료되었습니다.")
             
-            # Show '+' or completion button based on time
-            if remaining_time > 0:
-                # Hide all Streamlit elements and create a truly blank screen with only '+'
-                st.markdown("""
-                <style>
-                /* Hide Streamlit header, footer, and sidebar */
-                .stApp > header {visibility: hidden;}
-                .stApp > footer {visibility: hidden;}
-                .stSidebar {visibility: hidden;}
-                
-                /* Hide the main container padding */
-                .main .block-container {
-                    padding-top: 0;
-                    padding-bottom: 0;
-                    padding-left: 0;
-                    padding-right: 0;
-                    max-width: 100%;
-                }
-                
-                /* Create full-screen baseline container */
-                .baseline-fullscreen {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 100vh;
-                    background-color: white;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    font-size: 72px;
-                    font-weight: bold;
-                    color: black;
-                    z-index: 9999;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                
-                st.markdown('<div class="baseline-fullscreen">+</div>', unsafe_allow_html=True)
-                
-                # Auto-refresh without sleep to avoid flickering - use st.empty() and auto-rerun
-                if remaining_time > 1:  # Only auto-refresh if more than 1 second remaining
-                    st.rerun()
-            else:
-                # Baseline period is complete - show completion message and button
-                # Reset CSS to show normal Streamlit elements
-                st.markdown("""
-                <style>
-                /* Restore Streamlit header, footer, and sidebar */
-                .stApp > header {visibility: visible;}
-                .stApp > footer {visibility: visible;}
-                .stSidebar {visibility: visible;}
-                
-                /* Restore normal container padding */
-                .main .block-container {
-                    padding-top: 1rem;
-                    padding-bottom: 1rem;
-                    padding-left: 1rem;
-                    padding-right: 1rem;
-                    max-width: none;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                
-                st.success("베이스라인 측정이 완료되었습니다!")
-                st.write("30초 동안의 베이스라인 측정이 성공적으로 완료되었습니다.")
-                
-                if st.button("다음 단계로 이동", use_container_width=True):
-                    baseline_completed()
-                    st.rerun()
+            if st.button("다음 단계로 이동", use_container_width=True):
+                # Move to Bloom explanation stage
+                st.session_state.stage = "bloom_explanation"
+                log_event("Moving to Bloom explanation stage")
+                st.rerun()
         
         # Handle Bloom's taxonomy explanation before practice
         elif st.session_state.stage == "bloom_explanation":
@@ -1740,7 +1708,7 @@ def main():
         elif st.session_state.stage == "practice_ready":
             st.subheader("연습 세션 안내")
             st.write("이제 2회의 연습을 진행하겠습니다.")
-            st.write("연습에서는 실제 실험과 동일한 절차를 따르지만, 결과는 본 실험 데이터에 포함되지 않습니다.")
+            st.write("연습에서는 실제 실험과 동일한 절차를 따르며, 과정에 익숙해지기 위해 진행합니다. 궁금하신 점이 있으시면 연구자에게 언제든지 질문해주세요!")
             
             if st.button("연습 시작"):
                 # Initialize practice session
