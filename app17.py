@@ -19,16 +19,6 @@ from pydantic import BaseModel, Field
 # streamlit cache related import
 from functools import lru_cache
 
-css = """
-<style>
-.stRadio > div > label span {
-    font-family: sans-serif;
-    font-size: 16px;
-}
-</style>
-"""
-st.markdown(css, unsafe_allow_html=True)
-
 # Pydantic models for structured output
 class BloomClassification(BaseModel):
     bloom_level: str = Field(description="The Bloom's taxonomy level: 기억, 이해, 적용, 분석, 평가, or 창조")
@@ -1394,7 +1384,7 @@ def main():
                 age = st.number_input("귀하의 현재 만 나이를 기입하십시오.", min_value=18, max_value=100, value=None)
                 
                 # 3. 전공 및 학력 - Using st.data_editor
-                st.text("귀하의 전공 및 학력 사항을 모두 기입하십시오.")
+                st.markdown("<p>귀하의 전공 및 학력 사항을 모두 기입하십시오.</p>")
                 
                 # Initialize default education data
                 if 'education_data' not in st.session_state:
