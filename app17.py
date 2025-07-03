@@ -19,6 +19,16 @@ from pydantic import BaseModel, Field
 # streamlit cache related import
 from functools import lru_cache
 
+css = """
+<style>
+.stRadio > div > label span {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+</style>
+"""
+st.markdown(css, unsafe_allow_html=True)
+
 # Pydantic models for structured output
 class BloomClassification(BaseModel):
     bloom_level: str = Field(description="The Bloom's taxonomy level: 기억, 이해, 적용, 분석, 평가, or 창조")
