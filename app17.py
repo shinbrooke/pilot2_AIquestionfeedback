@@ -1292,7 +1292,6 @@ def submit_edited_question():
     start_iteration()
 
 # Main app
-# Main app
 def main():
     st.title("[파일럿 연구] 생성형 AI의 피드백 유형이 질문 수정에 미치는 영향")
     
@@ -1301,34 +1300,41 @@ def main():
     
     # Handle baseline screen FIRST, before anything else
     if st.session_state.get('stage') == "baseline_screen":
-        # Calculate elapsed time
-        current_time = time.time()
-        elapsed_time = current_time - st.session_state.baseline_start_time
+        # Send the start marker
+        send_marker("baseline_start")
+        log_event("Baseline session started")
         
-        # Check if time is up
-        if elapsed_time >= 30:
-            baseline_completed()
-            st.rerun()
-            return
+        # Create an empty container for the baseline display
+        baseline_container = st.empty()
         
-        # Show only the '+' symbol, centered
-        st.markdown("""
-        <div style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-size: 72px;
-            font-weight: bold;
-        ">
-        +
-        </div>
-        """, unsafe_allow_html=True)
+        # Show the baseline screen for 30 seconds
+        duration = 30  # 30 seconds
         
-        # Refresh every 2 seconds
-        # time.sleep(2)
-        # st.rerun()
-        # return  # Don't render anything else
+        # Display the '+' symbol
+        with baseline_container.container():
+            st.markdown("""
+            <div style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                font-size: 72px;
+                font-weight: bold;
+            ">
+            +
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Sleep for the full duration
+        time.sleep(duration)
+        
+        # Clear the container
+        baseline_container.empty()
+        
+        # Automatically proceed to next stage
+        baseline_completed()
+        st.rerun()
+        return  # Don't render anything else
     
     # Add sidebar ONLY when not in baseline screen
     with st.sidebar:
