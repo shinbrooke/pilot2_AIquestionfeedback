@@ -1293,7 +1293,7 @@ def submit_edited_question():
 
 # Main app
 def main():
-    st.markdown("## [파일럿] 생성형 AI의 피드백 유형이\n 질문 수정에 미치는 영향")
+    st.markdown("## [파일럿] 생성형 AI의 피드백 유형이 질문 수정에 미치는 영향")
     
     # Initialize session state
     initialize_session_state()
