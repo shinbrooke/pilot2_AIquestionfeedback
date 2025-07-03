@@ -1326,9 +1326,9 @@ def main():
         """, unsafe_allow_html=True)
         
         # Refresh every 2 seconds
-        time.sleep(2)
-        st.rerun()
-        return  # Don't render anything else
+        # time.sleep(2)
+        # st.rerun()
+        # return  # Don't render anything else
     
     # Add sidebar ONLY when not in baseline screen
     with st.sidebar:
