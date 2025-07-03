@@ -1293,7 +1293,7 @@ def submit_edited_question():
 
 # Main app
 def main():
-    st.title("[파일럿 연구] 생성형 AI의 피드백 유형이 질문 수정에 미치는 영향")
+    st.title("[파일럿] 생성형 AI의 피드백 유형이 질문 수정에 미치는 영향")
     
     # Initialize session state
     initialize_session_state()
@@ -1317,7 +1317,7 @@ def main():
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
+                height: 150vh;
                 font-size: 72px;
                 font-weight: bold;
             ">
@@ -1336,40 +1336,6 @@ def main():
         st.rerun()
         return  # Don't render anything else
     
-    # Add sidebar ONLY when not in baseline screen
-    with st.sidebar:
-        st.header("실험 진행 상황")
-        if st.session_state.get('started', False):
-            if st.session_state.baseline_mode:
-                st.write("**베이스라인 측정**")
-                st.write("빈 화면 보기 (30초)")
-            elif st.session_state.practice_mode:
-                st.write("**연습 세션**")
-                st.write(f"연습 반복: {st.session_state.iteration + 1}/2")
-                if hasattr(st.session_state, 'practice_condition_mapping'):
-                    current_feedback = st.session_state.practice_condition_mapping.get(st.session_state.iteration, 'unknown')
-                    st.write(f"현재 피드백 유형: {current_feedback}")
-            else:
-                # Fix: Use experiment_paragraphs instead of paragraphs
-                if hasattr(st.session_state, 'experiment_paragraphs'):
-                    total_paragraphs = len(st.session_state.experiment_paragraphs)
-                    st.write(f"현재 반복: {st.session_state.iteration + 1}/{total_paragraphs}")
-                else:
-                    st.write(f"현재 반복: {st.session_state.iteration + 1}")
-            st.write(f"현재 단계: {st.session_state.stage}")
-            
-            # Download current progress
-            if not st.session_state.practice_mode and not st.session_state.baseline_mode and st.session_state.responses:
-                csv_data = get_current_csv_data()
-                if csv_data:
-                    st.download_button(
-                        label="현재까지 결과 다운로드 (CSV)",
-                        data=csv_data,
-                        file_name=f"partial_results_{st.session_state.get('participant_id', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv",
-                        key="sidebar_download"
-                    )
-    
     # Check if the experiment has started
     if not st.session_state.started:
         st.write("Welcome to the experiment!")
@@ -1383,7 +1349,7 @@ def main():
         
         ---
         
-        실험은 사전설문, EEG 장비 착용, 베이스라인 측정(30초), 2개의 연습 문제, 그리고 본 실험으로 구성되어 있습니다.
+        실험은 사전설문(10분), EEG 장비 착용(30분), 베이스라인 측정(30초), 2개의 연습 문제(5분), 그리고 본 실험(55분)으로 구성되어 있습니다.
         사전 설문을 시작하려면 아래에 참여자 ID를 입력하고, '실험 시작' 버튼을 눌러주세요.
         """)
         
@@ -1417,15 +1383,41 @@ def main():
                 # 2. 나이
                 age = st.number_input("2. 귀하의 현재 만 나이를 기입하십시오.", min_value=18, max_value=100, value=None)
                 
-                # 3. 전공 및 학력
+                # 3. 전공 및 학력 - MODIFIED SECTION
                 st.write("3. 귀하의 전공 및 학력 사항을 모두 기입하십시오.")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    major = st.text_input("전공명 (예: 경영학과)")
-                with col2:
-                    degree = st.selectbox("학위명", ["학사", "석사", "박사"], index=None)
-                with col3:
-                    graduation_status = st.selectbox("졸업 여부", ["재학", "졸업"], index=None)
+                
+                # Initialize education entries in session state if not exists
+                if 'education_entries' not in st.session_state:
+                    st.session_state.education_entries = [{'major': '', 'degree': None, 'graduation_status': None}]
+                
+                # Display education entries
+                education_data = []
+                for i, entry in enumerate(st.session_state.education_entries):
+                    st.write(f"**학력 정보 {i+1}:**")
+                    col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+                    
+                    with col1:
+                        major = st.text_input(f"전공명 (예: 교육학과)", key=f"major_{i}", value=entry['major'])
+                    with col2:
+                        degree = st.selectbox(f"학위명", ["학사", "석사", "박사"], index=["학사", "석사", "박사"].index(entry['degree']) if entry['degree'] else None, key=f"degree_{i}")
+                    with col3:
+                        graduation_status = st.selectbox(f"졸업 여부", ["재학", "졸업", "휴학", "수료"], index=["재학", "졸업", "휴학", "수료"].index(entry['graduation_status']) if entry['graduation_status'] else None, key=f"graduation_status_{i}")
+                    with col4:
+                        if len(st.session_state.education_entries) > 1:
+                            if st.form_submit_button(f"삭제", key=f"remove_{i}"):
+                                st.session_state.education_entries.pop(i)
+                                st.rerun()
+                    
+                    education_data.append({
+                        'major': major,
+                        'degree': degree,
+                        'graduation_status': graduation_status
+                    })
+                
+                # Add new education entry button
+                if st.form_submit_button("+ 학력 정보 추가"):
+                    st.session_state.education_entries.append({'major': '', 'degree': None, 'graduation_status': None})
+                    st.rerun()
                 
                 # II. 인공지능 활용 경험
                 st.subheader("II. 인공지능 활용 경험")
@@ -1558,12 +1550,22 @@ def main():
                         missing_fields.append("성별")
                     if age is None:
                         missing_fields.append("나이")
-                    if not major.strip():
-                        missing_fields.append("전공명")
-                    if degree is None:
-                        missing_fields.append("학위명")
-                    if graduation_status is None:
-                        missing_fields.append("졸업 여부")
+                    
+                    # Validate education entries
+                    valid_education_entries = []
+                    for i, entry in enumerate(education_data):
+                        if entry['major'].strip() or entry['degree'] or entry['graduation_status']:
+                            if not entry['major'].strip():
+                                missing_fields.append(f"학력 정보 {i+1}의 전공명")
+                            if entry['degree'] is None:
+                                missing_fields.append(f"학력 정보 {i+1}의 학위명")
+                            if entry['graduation_status'] is None:
+                                missing_fields.append(f"학력 정보 {i+1}의 졸업 여부")
+                            if entry['major'].strip() and entry['degree'] and entry['graduation_status']:
+                                valid_education_entries.append(entry)
+                    
+                    if not valid_education_entries:
+                        missing_fields.append("최소 하나의 완전한 학력 정보")
                     
                     # Check if all scale responses are completed
                     if None in reading_efficacy_responses:
@@ -1584,13 +1586,19 @@ def main():
                             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "gender": gender,
                             "age": age,
-                            "major": major,
-                            "degree": degree,
-                            "graduation_status": graduation_status,
                             "ai_frequency_per_week": ai_frequency,
                             "ai_tools_used": ai_tools,
                             "ai_usage_purposes": ai_usage,
                         }
+                        
+                        # Add education data - store as JSON for multiple entries
+                        pretest_data["education_entries"] = json.dumps(valid_education_entries, ensure_ascii=False)
+                        
+                        # Also add flattened education data for easy analysis
+                        for i, entry in enumerate(valid_education_entries):
+                            pretest_data[f"education_{i+1}_major"] = entry['major']
+                            pretest_data[f"education_{i+1}_degree"] = entry['degree']
+                            pretest_data[f"education_{i+1}_graduation_status"] = entry['graduation_status']
                         
                         # Add reading efficacy responses
                         for i, response in enumerate(reading_efficacy_responses):
@@ -1832,18 +1840,28 @@ def main():
                 start_iteration()
                 st.rerun()
         
-        # Display progress
+        # Display progress (for stages after practice completion)
         elif st.session_state.stage not in ["practice_completed", "baseline_ready", "bloom_explanation", "practice_ready"]:
-            if st.session_state.baseline_mode:
-                # No progress bar for baseline
-                pass
-            elif st.session_state.practice_mode:
-                progress_bar = st.progress((st.session_state.iteration) / 2)
-                st.write(f"연습 {st.session_state.iteration + 1}/2")
-            else:
-                total_paragraphs = len(st.session_state.experiment_paragraphs)
-                progress_bar = st.progress((st.session_state.iteration) / total_paragraphs)
-                st.write(f"Iteration {st.session_state.iteration + 1}/{total_paragraphs}")
+            # Show experiment progress information at the top
+            if st.session_state.get('started', False):
+                if st.session_state.baseline_mode:
+                    st.info("**베이스라인 측정** - 빈 화면 보기 (30초)")
+                elif st.session_state.practice_mode:
+                    st.info(f"**연습 세션** - 연습 반복: {st.session_state.iteration + 1}/2")
+                else:
+                    if hasattr(st.session_state, 'experiment_paragraphs'):
+                        total_paragraphs = len(st.session_state.experiment_paragraphs)
+                        st.info(f"**본 실험** - 현재 반복: {st.session_state.iteration + 1}/{total_paragraphs}")
+                    else:
+                        st.info(f"**본 실험** - 현재 반복: {st.session_state.iteration + 1}")
+                
+                # Progress bar
+                if not st.session_state.baseline_mode:
+                    if st.session_state.practice_mode:
+                        progress_bar = st.progress((st.session_state.iteration) / 2)
+                    else:
+                        total_paragraphs = len(st.session_state.experiment_paragraphs)
+                        progress_bar = st.progress((st.session_state.iteration) / total_paragraphs)
             
             # Handle different stages
             if st.session_state.stage == "completed":
@@ -1860,17 +1878,6 @@ def main():
                 if st.checkbox("Show response summary"):
                     df = pd.DataFrame(st.session_state.responses)
                     st.write(df)
-                    
-                # Option to download CSV
-                if 'responses' in st.session_state and st.session_state.responses:
-                    df = pd.DataFrame(st.session_state.responses)
-                    csv = df.to_csv(index=False)
-                    st.download_button(
-                        label="Download results as CSV",
-                        data=csv,
-                        file_name=f"results_{st.session_state.participant_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
-                    )
             
             elif st.session_state.stage == "show_paragraph":
                 # Display the paragraph
@@ -2060,6 +2067,44 @@ def main():
                 
                 if st.button("최종 제출", key=f"final_submit_button_{st.session_state.iteration}_{'practice' if st.session_state.practice_mode else 'main'}"):
                     submit_edited_question()
-
+    
+    # BOTTOM DOWNLOAD SECTION - Add this at the very end of main()
+    # This will appear at the bottom of the screen for all relevant stages
+    if (st.session_state.get('started', False) and 
+        not st.session_state.get('baseline_mode', False) and 
+        not st.session_state.get('practice_mode', False) and 
+        st.session_state.get('responses', [])):
+        
+        st.markdown("---")  # Separator line
+        st.markdown("### 💾 데이터 다운로드")
+        
+        csv_data = get_current_csv_data()
+        if csv_data:
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.download_button(
+                    label="📁 현재까지 결과 다운로드 (CSV)",
+                    data=csv_data,
+                    file_name=f"partial_results_{st.session_state.get('participant_id', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    key="bottom_download",
+                    use_container_width=True
+                )
+        
+        # Final download for completed experiment
+        if st.session_state.stage == "completed":
+            if 'responses' in st.session_state and st.session_state.responses:
+                df = pd.DataFrame(st.session_state.responses)
+                csv = df.to_csv(index=False)
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    st.download_button(
+                        label="📁 최종 결과 다운로드 (CSV)",
+                        data=csv,
+                        file_name=f"results_{st.session_state.participant_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        key="final_download",
+                        use_container_width=True
+                    )
 if __name__ == "__main__":
     main()
