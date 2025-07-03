@@ -1293,7 +1293,7 @@ def submit_edited_question():
 
 # Main app
 def main():
-    st.title("[파일럿] 생성형 AI의 피드백 유형이\n질문 수정에 미치는 영향")
+    st.markdown("""# *[파일럿] 생성형 AI의 피드백 유형이\n질문 수정에 미치는 영향*""")
     
     # Initialize session state
     initialize_session_state()
@@ -1385,7 +1385,7 @@ def main():
                 
                 # 3. 전공 및 학력 - Using st.data_editor
                 st.markdown("귀하의 전공 및 학력 사항을 모두 기입하십시오.")
-                st.markdown("""필요한 경우 행을 추가하여 여러 전공/학력을 입력할 수 있습니다.  칸을 더블클릭하여 정보를 입력해주세요.""")
+                st.markdown("""필요한 경우 행을 추가하여 여러 전공/학력을 입력할 수 있습니다.\n칸을 더블클릭하여 정보를 입력해주세요.""")
                 
                 # Initialize default education data
                 if 'education_data' not in st.session_state:
