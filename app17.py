@@ -1379,11 +1379,11 @@ def main():
                                 
                 # 1. 성별
                 st.write("1. 귀하의 성별을 선택하십시오.")
-                gender = st.radio(["남", "여"], horizontal=True, index=None)
+                gender = st.radio("성별:", ["남", "여"], horizontal=True, index=None)
                 
                 # 2. 나이
                 st.write("2. 귀하의 현재 만 나이를 기입하십시오.")
-                age = st.number_input(min_value=18, max_value=100, value=None)
+                age = st.number_input("만 나이:", min_value=18, max_value=100, value=None)
                 
                 # 3. 전공 및 학력 - Using st.data_editor
                 st.write("3. 귀하의 전공 및 학력 사항을 모두 기입하십시오.")
