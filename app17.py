@@ -1055,8 +1055,7 @@ def log_textarea_focus(textarea_type):
 def submit_question():
     # Get the question from session state (it should exist now)
     question = st.session_state.get('user_question', '')
-    question_comments = st.session_state.get('question_comments', '')
-    
+        
     # Enhanced validation
     if not question.strip():
         st.error("질문을 입력해주세요.")
@@ -1074,7 +1073,6 @@ def submit_question():
     
     # Store the question in current iteration data for persistence
     st.session_state.current_iteration_data['user_question'] = question
-    st.session_state.current_iteration_data['question_comments'] = question_comments
     st.session_state.current_iteration_data['question_input_interaction_time'] = question_input_interaction_time
     
     send_marker("question_input_end")
@@ -1088,7 +1086,6 @@ def submit_question():
     # Log the submitted question with paragraph information
     log_event_batched("Question submitted", {
         "question": question,
-        "question_comments": question_comments,
         "question_input_interaction_time": question_input_interaction_time,
         "iteration": st.session_state.iteration,
         "paragraph_index": current_paragraph_data['index'],
@@ -1132,9 +1129,7 @@ def submit_survey():
     curiosity = st.session_state.get('curiosity')
     relatedness = st.session_state.get('relatedness')
     accept_feedback = st.session_state.get('accept_feedback')
-    feedback_comments = st.session_state.get('feedback_comments', '')
-    survey_comments = st.session_state.get('survey_comments', '')
-    
+        
     # Validate that required fields are filled
     if curiosity is None:
         st.error("Please rate your curiosity level before proceeding.")
@@ -1150,9 +1145,7 @@ def submit_survey():
     st.session_state.current_iteration_data['curiosity'] = curiosity
     st.session_state.current_iteration_data['relatedness'] = relatedness
     st.session_state.current_iteration_data['accept_feedback'] = accept_feedback
-    st.session_state.current_iteration_data['feedback_comments'] = feedback_comments
-    st.session_state.current_iteration_data['survey_comments'] = survey_comments
-    
+        
     # Get paragraph information
     if st.session_state.practice_mode:
         current_paragraph_data = st.session_state.practice_paragraphs[st.session_state.iteration]
@@ -1164,8 +1157,6 @@ def submit_survey():
         "curiosity": curiosity,
         "relatedness": relatedness,
         "accept_feedback": accept_feedback,
-        "feedback_comments": feedback_comments,
-        "survey_comments": survey_comments,
         "iteration": st.session_state.iteration,
         "paragraph_index": current_paragraph_data['index'],
         "paragraph_genre": current_paragraph_data['genre'],
@@ -1185,20 +1176,17 @@ def submit_edited_question():
     
     # Get the edited question and comments
     edited_question = st.session_state.get('edited_question', '')
-    edit_comments = st.session_state.get('edit_comments', '')
-    
+        
     if not edited_question.strip():
         st.error("Please enter a question before proceeding.")
         return
     
     # Store in current iteration data
     st.session_state.current_iteration_data['edited_question'] = edited_question
-    st.session_state.current_iteration_data['edit_comments'] = edit_comments
-    
+        
     # Log the edited question
     log_event("Edited question submitted", {
         "edited_question": edited_question,
-        "edit_comments": edit_comments,
         "practice_mode": st.session_state.practice_mode,
         "baseline_mode": st.session_state.baseline_mode
     })
@@ -1235,16 +1223,12 @@ def submit_edited_question():
         "paragraph_genre": current_paragraph_data['genre'],
         "feedback_type": st.session_state.current_iteration_data.get('feedback_type', 'unknown'),
         "original_question": st.session_state.current_iteration_data.get('user_question', ''),
-        "question_comments": st.session_state.current_iteration_data.get('question_comments', ''),
         "question_input_interaction_time_seconds": st.session_state.current_iteration_data.get('question_input_interaction_time'),
         "feedback": st.session_state.current_iteration_data.get('feedback', ''),
-        "feedback_comments": st.session_state.current_iteration_data.get('feedback_comments', ''),
         "curiosity": st.session_state.current_iteration_data.get('curiosity'),
         "relatedness": st.session_state.current_iteration_data.get('relatedness'),
         "accept_feedback": st.session_state.current_iteration_data.get('accept_feedback'),
-        "survey_comments": st.session_state.current_iteration_data.get('survey_comments', ''),
         "edited_question": edited_question,
-        "edit_comments": edit_comments,
         "edit_textarea_interaction_time_seconds": edit_textarea_interaction_time,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         # Add question metrics to CSV
@@ -1277,8 +1261,7 @@ def submit_edited_question():
     # Reset widget keys by removing them from session state
     widget_keys_to_reset = [
         'user_question', 'edited_question',
-        'paragraph_comments', 'question_comments', 'feedback_comments', 
-        'survey_comments', 'edit_comments', 'curiosity', 'relatedness', 'accept_feedback'
+        'curiosity', 'relatedness', 'accept_feedback'
     ]
     
     for key in widget_keys_to_reset:
@@ -1932,16 +1915,6 @@ def main():
                 # Store question immediately when typed
                 st.session_state.user_question = user_question
                 
-                # Comments section
-                question_comments = st.text_area(
-                    "[파일럿용 피드백] 질문 입력 관련 코멘트 (선택):",
-                    key=f"question_comments_{st.session_state.iteration}_{'practice' if st.session_state.practice_mode else 'main'}",
-                    height=100
-                )
-                
-                # Store comments immediately
-                st.session_state.question_comments = question_comments
-                
                 if st.button("질문 제출", key="question_submit_button"):
                     submit_question()
             
@@ -1965,16 +1938,6 @@ def main():
                 current_feedback = st.session_state.current_iteration_data.get('feedback', '')
                 st.markdown(f'**{current_feedback}**')
                 
-                # Comments section
-                feedback_comments = st.text_area(
-                    "[파일럿용 피드백] AI 피드백 관련 코멘트 (선택):",
-                    key=f"feedback_comments_{st.session_state.iteration}_{'practice' if st.session_state.practice_mode else 'main'}",
-                    height=100
-                )
-                
-                # Store comments immediately
-                st.session_state.feedback_comments = feedback_comments
-
                 # next step explanation
                 st.markdown("""다음으로 넘어가면 AI 피드백에 대한 설문이 제시됩니다. AI 피드백을 완전히 숙지하고 넘어가주세요.""")
                 
@@ -2025,16 +1988,6 @@ def main():
                 if accept_feedback_option is not None:
                     st.session_state.accept_feedback = accept_feedback_option
                 
-                # Comments section
-                survey_comments = st.text_area(
-                    "[파일럿용 피드백] 설문이나 실험 관련 추가 코멘트 (선택):",
-                    key=f"survey_comments_{st.session_state.iteration}_{'practice' if st.session_state.practice_mode else 'main'}",
-                    height=100
-                )
-                
-                # Store comments immediately
-                st.session_state.survey_comments = survey_comments
-                
                 if st.button("설문 제출", key="survey_submit_button"):
                     submit_survey()
             
@@ -2072,16 +2025,6 @@ def main():
                 # Store edited question immediately
                 st.session_state.edited_question = edited_question
                 
-                # Comments section
-                edit_comments = st.text_area(
-                    "[파일럿용 피드백] 질문 수정 관련 코멘트 (선택):",
-                    key=f"edit_comments_{st.session_state.iteration}_{'practice' if st.session_state.practice_mode else 'main'}",
-                    height=100
-                )
-                
-                # Store comments immediately
-                st.session_state.edit_comments = edit_comments
-
                 st.write("최종 제출 버튼을 두 번 누르면 다음으로 넘어갑니다.")
                 
                 if st.button("최종 제출", key=f"final_submit_button_{st.session_state.iteration}_{'practice' if st.session_state.practice_mode else 'main'}"):
