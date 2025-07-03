@@ -1386,7 +1386,7 @@ def main():
                 # 3. 전공 및 학력 - Using st.data_editor
                 st.text("귀하의 전공 및 학력 사항을 모두 기입하십시오.")
                 st.text("필요한 경우 행을 추가하여 여러 전공/학력을 입력할 수 있습니다.")
-                st.text("칸을 더블클릭하여 정보를 입력해주세요.")
+                st.caption("칸을 더블클릭하여 정보를 입력해주세요.")
                 
                 # Initialize default education data
                 if 'education_data' not in st.session_state:
