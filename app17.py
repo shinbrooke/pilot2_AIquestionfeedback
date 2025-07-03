@@ -1384,7 +1384,7 @@ def main():
                 age = st.number_input("귀하의 현재 만 나이를 기입하십시오.", min_value=18, max_value=100, value=None)
                 
                 # 3. 전공 및 학력 - Using st.data_editor
-                st.markdown("<p>귀하의 전공 및 학력 사항을 모두 기입하십시오.</p>")
+                st.markdown("""<p>귀하의 전공 및 학력 사항을 모두 기입하십시오.</p>""")
                 
                 # Initialize default education data
                 if 'education_data' not in st.session_state:
